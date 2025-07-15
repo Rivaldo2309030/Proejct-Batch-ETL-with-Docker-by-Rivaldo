@@ -1,0 +1,35 @@
+# Ignorar carpetas de logs (especialmente de Airflow)
+logs/
+**/logs/
+logs/*
+
+# Archivos de base de datos SQLite (por si acaso)
+*.sqlite
+*.sqlite3
+
+# Archivos de entorno o configuración local
+.env
+*.env
+
+# Archivos de sistema
+.DS_Store
+Thumbs.db
+
+# Cachés y compilados de Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Checkpoints de Jupyter Notebooks
+.ipynb_checkpoints/
+
+# Archivo de base de datos de Airflow (local SQLite)
+airflow.db
+
+# Archivos compilados de Python
+*.pyc
+*.pyo
+
+# Archivos temporales de Docker, si los hay
+volumes/
