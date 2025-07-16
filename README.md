@@ -169,7 +169,7 @@ The docker-compose.yml file configures all the services needed to run the projec
 
 ## CONTACT
 
-- **Name:** Rivaldo Canché
+- **Name:** Rivaldo Canche
 - **Email:** angelrivaldoc@gmail.com
 - **GitHub:** [https://github.com/Rivaldo2309030](https://github.com/Rivaldo2309030)
 - **LinkedIn:** [www.linkedin.com/in/rivaldo-canche-10a497321](https://linkedin.com/in/rivaldo-canche-10a497321)  :)
