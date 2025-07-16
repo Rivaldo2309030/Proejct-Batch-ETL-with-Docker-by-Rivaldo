@@ -5,6 +5,7 @@ from airflow.operators.python import PythonOperator
 from datetime import datetime
 from utils.mongo_utils import get_mongo_client
 
+# Function to extract weather data from the API and store it in MongoDB
 def extract_weather_data(ti):
     client = get_mongo_client()
     db = client["weather_db"]
@@ -19,13 +20,14 @@ def extract_weather_data(ti):
         response = requests.get(url)
         if response.status_code == 200:
             data = response.json()
+            # Upsert based on generation timestamp
             raw_collection.update_one(
                 {"generationtime_ms": data.get("generationtime_ms")},
                 {"$set": data},
                 upsert=True
             )
             ti.xcom_push(key="raw_weather_data", value=data)
-            logging.info("Datos raw insertados o actualizados en raw_weather")
+            logging.info("Raw data inserted or updated in raw_weather")
             return data
         else:
             error_data = {"error": f"API call failed with status {response.status_code}"}
@@ -34,14 +36,16 @@ def extract_weather_data(ti):
     except Exception as e:
         error_data = {"error": str(e)}
         ti.xcom_push(key="raw_weather_data", value=error_data)
-        logging.error(f"Error en extracción Weather: {e}")
+        logging.error(f"Error during Weather extraction: {e}")
 
+# Default DAG arguments
 default_args = {
     'start_date': datetime(2025, 7, 1),
     'retries': 1,
-    'retry_delay': 300,
+    'retry_delay': 300,  # in seconds (5 minutes)
 }
 
+# Define the DAG
 with DAG(
     'ingestion_weather',
     default_args=default_args,

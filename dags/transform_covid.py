@@ -2,6 +2,7 @@ import logging
 from datetime import datetime
 from utils.mongo_utils import get_mongo_client
 
+# Function to transform raw COVID data into a structured format
 def transform_covid_data(ti):
     client = get_mongo_client()
     db = client["covid_db"]
@@ -9,16 +10,16 @@ def transform_covid_data(ti):
 
     docs = list(raw_collection.find())
     if not docs:
-        logging.error("No hay datos raw para transformar en covid_db.raw_covid")
+        logging.error("No raw data found to transform in covid_db.raw_covid")
         return []
 
     transformed_list = []
     for data in docs:
         if not isinstance(data, dict):
-            logging.warning("Registro covid no es dict, se omite.")
+            logging.warning("COVID record is not a dict, skipping.")
             continue
         if not all(key in data for key in ["country", "cases", "deaths", "recovered", "updated"]):
-            logging.warning(f"Registro covid incompleto omitido: {data.get('country', 'sin país')}")
+            logging.warning(f"Incomplete COVID record skipped: {data.get('country', 'no country')}")
             continue
 
         cases = data.get("cases", 0)
@@ -26,9 +27,10 @@ def transform_covid_data(ti):
         recovered = data.get("recovered", 0)
 
         try:
+            # Convert timestamp from milliseconds to ISO string
             updated_at = datetime.utcfromtimestamp(data["updated"] / 1000).isoformat()
         except Exception as e:
-            logging.warning(f"Error al parsear fecha para {data.get('country', 'sin país')}: {e}")
+            logging.warning(f"Error parsing date for {data.get('country', 'no country')}: {e}")
             updated_at = None
 
         transformed = {
@@ -47,6 +49,5 @@ def transform_covid_data(ti):
         transformed_list.append(transformed)
 
     ti.xcom_push(key="transformed_covid_data", value=transformed_list)
-    logging.info(f"Datos COVID transformados enviados correctamente. Total registros: {len(transformed_list)}")
+    logging.info(f"COVID data transformed successfully. Total records: {len(transformed_list)}")
     return transformed_list
-
