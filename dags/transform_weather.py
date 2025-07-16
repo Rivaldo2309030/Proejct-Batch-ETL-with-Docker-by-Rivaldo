@@ -1,6 +1,7 @@
 import logging
 from datetime import datetime
 
+# Transform raw weather data into a structured format
 def transform_weather_data(ti):
     data = ti.xcom_pull(key="raw_weather_data", task_ids="extract_weather_task")
     if not data or not isinstance(data, dict) or "hourly" not in data:
@@ -19,6 +20,7 @@ def transform_weather_data(ti):
             "cloud_cover": hourly["cloud_cover"][i],
             "humidity_percent": hourly["relative_humidity_2m"][i],
         }
+        # Mark as extreme if heavy rain or low temperature
         record["is_extreme_weather"] = (record["rain_mm"] > 10 or record["temperature_c"] < 10)
         transformed_records.append(record)
 
@@ -29,19 +31,20 @@ def transform_weather_data(ti):
     }
 
     ti.xcom_push(key="transformed_weather_data", value=transformed)
-    logging.info("Datos Weather transformados enviados correctamente.")
+    logging.info("Weather data transformed and pushed successfully.")
     return transformed
 
+# Generate a summary from transformed weather data
 def summarize_weather_data(ti):
     transformed_data = ti.xcom_pull(key="transformed_weather_data", task_ids="transform_weather_task")
     if not transformed_data:
-        logging.warning("No hay datos transformados de weather para resumir")
+        logging.warning("No transformed weather data found to summarize")
         return {}
 
-    # Ejemplo básico: contar registros y calcular promedio temperatura
+    # Basic summary: count records and calculate average temperature
     records = transformed_data.get("records", [])
     if not records:
-        logging.warning("No hay registros para resumen")
+        logging.warning("No records found for summary")
         return {}
 
     avg_temp = sum(r["temperature_c"] for r in records) / len(records)
@@ -53,13 +56,14 @@ def summarize_weather_data(ti):
         "total_rain_mm": round(total_rain, 2),
     }
 
-    logging.info(f"Resumen Weather generado: {summary}")
+    logging.info(f"Weather summary generated: {summary}")
     ti.xcom_push(key="weather_summary", value=summary)
     return summary
 
+# Report the summarized weather data
 def report_weather_summary(ti):
     summary = ti.xcom_pull(key="weather_summary", task_ids="summarize_weather_task")
     if summary:
-        logging.info(f"Reporte Weather Summary: {summary}")
+        logging.info(f"Weather Summary Report: {summary}")
     else:
-        logging.warning("No hay resumen de weather para reportar")
+        logging.warning("No weather summary found to report")
