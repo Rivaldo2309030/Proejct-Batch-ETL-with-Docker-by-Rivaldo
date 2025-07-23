@@ -21,13 +21,24 @@ def load_covid_data(ti):
     db = client["covid_db"]
     processed_collection = db["processed_covid"]
 
+    upserted = 0
     try:
-        processed_collection.delete_many({})  # Clear previous data
-        processed_collection.insert_many(transformed_data)  # Insert new data
-        logging.info(f"{len(transformed_data)} transformed records loaded into processed_covid.")
-        return len(transformed_data)
+        for record in transformed_data:
+            if "country" in record and "date" in record:
+                processed_collection.update_one(
+                    {"country": record["country"], "date": record["date"]},
+                    {"$set": record},
+                    upsert=True
+                )
+                upserted += 1
+            else:
+                logging.warning(f"Registro omitido por falta de 'country' o 'date': {record}")
+
+        logging.info(f"{upserted} registros transformados cargados/actualizados en processed_covid.")
+        return upserted
+
     except Exception as e:
-        logging.error(f"Error loading COVID data into MongoDB: {e}")
+        logging.error(f"Error al cargar datos COVID en MongoDB: {e}")
 
 # Just a placeholder for COVID reporting logic
 def report_covid():
